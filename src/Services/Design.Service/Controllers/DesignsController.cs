@@ -21,17 +21,36 @@ public class DesignsController : ControllerBase
     [Authorize(Roles = "Designer")]
     public async Task<IActionResult> CreateDesign([FromBody] CreateDesignRequest request)
     {
-        var designerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(designerIdClaim))
-            return Unauthorized();
+        try
+        {
+            // Log received request for debugging
+            Console.WriteLine($"Received design request: Title={request?.Title}, Category={request?.Category}, FileUrls count={request?.FileUrls?.Count}");
+            
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                Console.WriteLine($"Model validation failed: {string.Join(", ", errors)}");
+                return BadRequest(new { message = "Invalid request data", errors });
+            }
 
-        var designerId = int.Parse(designerIdClaim);
-        var design = await _designService.CreateDesign(designerId, request);
+            var designerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(designerIdClaim))
+                return Unauthorized();
 
-        if (design == null)
-            return BadRequest(new { message = "Failed to create design" });
+            var designerId = int.Parse(designerIdClaim);
+            var design = await _designService.CreateDesign(designerId, request);
 
-        return CreatedAtAction(nameof(GetDesign), new { id = design.Id }, design);
+            if (design == null)
+                return BadRequest(new { message = "Failed to create design" });
+
+            return CreatedAtAction(nameof(GetDesign), new { id = design.Id }, design);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Create design exception: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return BadRequest(new { message = "Failed to create design", error = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]

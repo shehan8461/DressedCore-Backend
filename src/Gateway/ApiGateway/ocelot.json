@@ -13,6 +13,19 @@
       "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Options" ]
     },
     {
+      "DownstreamPathTemplate": "/api/designs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "design-service",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/designs",
+      "UpstreamHttpMethod": [ "Get", "Post", "Options" ],
+      "Priority": 1
+    },
+    {
       "DownstreamPathTemplate": "/api/designs/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -23,6 +36,19 @@
       ],
       "UpstreamPathTemplate": "/api/designs/{everything}",
       "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete", "Patch", "Options" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/quotes",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "quote-service",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/quotes",
+      "UpstreamHttpMethod": [ "Get", "Post", "Options" ],
+      "Priority": 1
     },
     {
       "DownstreamPathTemplate": "/api/quotes/{everything}",
@@ -38,6 +64,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5000"
+    "BaseUrl": "http://localhost:4000"
   }
 }

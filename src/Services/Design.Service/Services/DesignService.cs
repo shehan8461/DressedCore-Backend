@@ -63,8 +63,7 @@ public class DesignService : IDesignService
             var query = @"
                 SELECT d.Id, d.DesignerId, d.Title, d.Description, d.Category, d.FileUrls, d.Status, 
                        d.CreatedAt, d.Deadline, d.Quantity, d.Specifications,
-                       des.CompanyName,
-                       (SELECT COUNT(*) FROM Quotes q WHERE q.DesignId = d.Id) as QuoteCount
+                       des.CompanyName
                 FROM Designs d
                 LEFT JOIN Designers des ON d.DesignerId = des.Id
                 WHERE d.Id = @Id";
@@ -93,12 +92,13 @@ public class DesignService : IDesignService
                 Quantity = reader.GetInt32(9),
                 Specifications = reader.GetString(10),
                 DesignerName = reader.IsDBNull(11) ? "" : reader.GetString(11),
-                QuoteCount = reader.GetInt32(12)
+                QuoteCount = 0 // Will be populated by separate query or from quote service
             };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Get design error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return null;
         }
     }
@@ -113,8 +113,7 @@ public class DesignService : IDesignService
             var query = @"
                 SELECT d.Id, d.DesignerId, d.Title, d.Description, d.Category, d.FileUrls, d.Status, 
                        d.CreatedAt, d.Deadline, d.Quantity, d.Specifications,
-                       des.CompanyName,
-                       (SELECT COUNT(*) FROM Quotes q WHERE q.DesignId = d.Id) as QuoteCount
+                       des.CompanyName
                 FROM Designs d
                 LEFT JOIN Designers des ON d.DesignerId = des.Id
                 WHERE d.DesignerId = @DesignerId
@@ -144,7 +143,7 @@ public class DesignService : IDesignService
                     Quantity = reader.GetInt32(9),
                     Specifications = reader.GetString(10),
                     DesignerName = reader.IsDBNull(11) ? "" : reader.GetString(11),
-                    QuoteCount = reader.GetInt32(12)
+                    QuoteCount = 0 // Will be populated by separate query or from quote service
                 });
             }
 
@@ -153,6 +152,7 @@ public class DesignService : IDesignService
         catch (Exception ex)
         {
             Console.WriteLine($"Get designer designs error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return new List<DesignResponse>();
         }
     }
@@ -167,8 +167,7 @@ public class DesignService : IDesignService
             var query = @"
                 SELECT d.Id, d.DesignerId, d.Title, d.Description, d.Category, d.FileUrls, d.Status, 
                        d.CreatedAt, d.Deadline, d.Quantity, d.Specifications,
-                       des.CompanyName,
-                       (SELECT COUNT(*) FROM Quotes q WHERE q.DesignId = d.Id) as QuoteCount
+                       des.CompanyName
                 FROM Designs d
                 LEFT JOIN Designers des ON d.DesignerId = des.Id
                 WHERE d.Status IN (2, 3)"; // Published or QuotingOpen
@@ -209,7 +208,7 @@ public class DesignService : IDesignService
                     Quantity = reader.GetInt32(9),
                     Specifications = reader.GetString(10),
                     DesignerName = reader.IsDBNull(11) ? "" : reader.GetString(11),
-                    QuoteCount = reader.GetInt32(12)
+                    QuoteCount = 0 // Will be populated by separate query or from quote service
                 });
             }
 
@@ -218,6 +217,7 @@ public class DesignService : IDesignService
         catch (Exception ex)
         {
             Console.WriteLine($"Get all designs error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return new List<DesignResponse>();
         }
     }
