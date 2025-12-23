@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: dressed-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: dressed_auth
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - dressed-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: dressed-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - dressed-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: src/Services/Auth.Service/Dockerfile
+    container_name: auth-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=dressed_auth;User=root;Password=rootpassword;
+    ports:
+      - "5001:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dressed-network
+
+  # Design Service
+  design-service:
+    build:
+      context: .
+      dockerfile: src/Services/Design.Service/Dockerfile
+    container_name: design-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=dressed_design;User=root;Password=rootpassword;
+    ports:
+      - "5002:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dressed-network
+
+  # Quote Service
+  quote-service:
+    build:
+      context: .
+      dockerfile: src/Services/Quote.Service/Dockerfile
+    container_name: quote-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=dressed_quote;User=root;Password=rootpassword;
+    ports:
+      - "5003:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dressed-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/ApiGateway/Dockerfile
+    container_name: api-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:80"
+    depends_on:
+      - auth-service
+      - design-service
+      - quote-service
+    networks:
+      - dressed-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./DressedCore Frontend
+      dockerfile: Dockerfile
+    container_name: dressed-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - dressed-network
+
+volumes:
+  mysql_data:
+
+networks:
+  dressed-network:
+    driver: bridge
