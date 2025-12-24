@@ -222,4 +222,59 @@ VALUES (1, 2, 'Quality Garments Ltd', '+0987654321', '456 Manufacturing Ave, CA'
 INSERT INTO Quotes (DesignId, SupplierId, Price, DeliveryTimeInDays, QuoteText, TermsAndConditions, Status, CreatedAt)
 VALUES (1, 1, 1500.00, 30, 'We can manufacture this design with high quality cotton fabric. Price includes materials and manufacturing.', 'Payment: 50% advance, 50% on delivery. Delivery time may vary based on fabric availability.', 1, NOW());
 
+-- Use communication database
+USE dressed_communication;
+
+-- Messages table
+CREATE TABLE IF NOT EXISTS Messages (
+    MessageId INT AUTO_INCREMENT PRIMARY KEY,
+    SenderId INT NOT NULL,
+    ReceiverId INT NOT NULL,
+    Content TEXT NOT NULL,
+    DesignId INT,
+    QuoteId INT,
+    IsRead BOOLEAN DEFAULT FALSE,
+    CreatedAt DATETIME NOT NULL,
+    INDEX idx_sender (SenderId),
+    INDEX idx_receiver (ReceiverId),
+    INDEX idx_design (DesignId),
+    INDEX idx_quote (QuoteId),
+    INDEX idx_created (CreatedAt)
+);
+
+-- Create payment database
+CREATE DATABASE IF NOT EXISTS dressed_payment;
+USE dressed_payment;
+
+-- Payments table
+CREATE TABLE IF NOT EXISTS Payments (
+    PaymentId INT AUTO_INCREMENT PRIMARY KEY,
+    OrderId INT NOT NULL,
+    UserId INT NOT NULL,
+    Amount DECIMAL(10,2) NOT NULL,
+    PlatformFee DECIMAL(10,2) NOT NULL,
+    Status VARCHAR(50) NOT NULL,
+    PaymentMethod VARCHAR(50) NOT NULL,
+    TransactionId VARCHAR(100),
+    CreatedAt DATETIME NOT NULL,
+    INDEX idx_order (OrderId),
+    INDEX idx_user (UserId),
+    INDEX idx_status (Status),
+    INDEX idx_created (CreatedAt)
+);
+
+-- Transactions table
+CREATE TABLE IF NOT EXISTS Transactions (
+    TransactionId INT AUTO_INCREMENT PRIMARY KEY,
+    PaymentId INT NOT NULL,
+    Type VARCHAR(50) NOT NULL,
+    Amount DECIMAL(10,2) NOT NULL,
+    Status VARCHAR(50) NOT NULL,
+    CreatedAt DATETIME NOT NULL,
+    FOREIGN KEY (PaymentId) REFERENCES Payments(PaymentId) ON DELETE CASCADE,
+    INDEX idx_payment (PaymentId),
+    INDEX idx_type (Type),
+    INDEX idx_created (CreatedAt)
+);
+
 COMMIT;

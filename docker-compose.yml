@@ -86,6 +86,57 @@ services:
     networks:
       - dressed-network
 
+  # Communication Service
+  communication-service:
+    build:
+      context: .
+      dockerfile: src/Services/Communication.Service/Dockerfile
+    container_name: communication-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=dressed_communication;User=root;Password=rootpassword;
+    ports:
+      - "5004:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dressed-network
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: src/Services/Payment.Service/Dockerfile
+    container_name: payment-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=dressed_payment;User=root;Password=rootpassword;
+    ports:
+      - "5005:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dressed-network
+
+  # Order Service
+  order-service:
+    build:
+      context: .
+      dockerfile: src/Services/Order.Service/Dockerfile
+    container_name: order-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=dressed_order;User=root;Password=rootpassword;
+    ports:
+      - "5006:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dressed-network
+
   # API Gateway
   api-gateway:
     build:
@@ -100,6 +151,8 @@ services:
       - auth-service
       - design-service
       - quote-service
+      - communication-service
+      - payment-service
     networks:
       - dressed-network
 
